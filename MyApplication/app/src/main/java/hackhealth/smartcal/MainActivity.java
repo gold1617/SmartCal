@@ -31,6 +31,9 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Parcelable;
+import android.provider.*;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
@@ -39,6 +42,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -59,6 +63,9 @@ public class MainActivity extends Activity
     static final int REQUEST_AUTHORIZATION = 1001;
     static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
     static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
+
+    static final int REQUEST_CALENDARS = 1;
+    static final int REQUEST_EVENTS = 2;
 
     private static final String BUTTON_TEXT = "Call Google Calendar API";
     private static final String PREF_ACCOUNT_NAME = "accountName";
@@ -85,6 +92,7 @@ public class MainActivity extends Activity
 
         mCallApiButton = new Button(this);
         mCallApiButton.setText(BUTTON_TEXT);
+
         mCallApiButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -92,6 +100,8 @@ public class MainActivity extends Activity
                 mOutputText.setText("");
                 getResultsFromApi();
                 mCallApiButton.setEnabled(true);
+//                Intent myintent=new Intent(v.getContext(),MakeRequestTask.class);
+//                startActivityForResult(myintent,1);
             }
         });
         activityLayout.addView(mCallApiButton);
@@ -133,7 +143,7 @@ public class MainActivity extends Activity
         } else if (! isDeviceOnline()) {
             mOutputText.setText("No network connection available.");
         } else {
-            new MakeRequestTask(mCredential).execute();
+            new MakeRequestTask(mCredential,getApplicationContext()).execute();
         }
     }
 
@@ -217,6 +227,9 @@ public class MainActivity extends Activity
                     getResultsFromApi();
                 }
                 break;
+
+            case 1: System.out.println("YAY");
+                mOutputText.setText("TYAAAAAAAAAAAAAA");
         }
     }
 
@@ -323,8 +336,10 @@ public class MainActivity extends Activity
     private class MakeRequestTask extends AsyncTask<Void, Void, List<String>> {
         private com.google.api.services.calendar.Calendar mService = null;
         private Exception mLastError = null;
+        Context c;
 
-        public MakeRequestTask(GoogleAccountCredential credential) {
+        public MakeRequestTask(GoogleAccountCredential credential,Context context) {
+            c = context;
             HttpTransport transport = AndroidHttp.newCompatibleTransport();
             JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
             mService = new com.google.api.services.calendar.Calendar.Builder(
@@ -379,19 +394,30 @@ public class MainActivity extends Activity
         @Override
         protected void onPostExecute(List output) {
             mProgress.hide();
+            List<String> formattedOutput = new ArrayList<String>();
             if (output == null || output.size() == 0) {
                 mOutputText.setText("No results returned.");
             } else
             {
-                List<String> formattedOutput = new ArrayList<String>();
                 for(CalendarListEntry entry: (List<CalendarListEntry>) output)
                 {
                     formattedOutput.add(entry.getSummary());
                 }
-                formattedOutput.add(0, "Data retrieved using the Google Calendar API:");
-                mOutputText.setText(TextUtils.join("\n", formattedOutput));
+//                formattedOutput.add(0, "Available Calendars:");
+//                mOutputText.setText(TextUtils.join("\n", formattedOutput));
             }
+            Intent intent = new Intent(c,UserInput.class);
+            Object obj = output;
+//            intent.putExtra("Calendars",(Parcelable) obj);
+            intent.putStringArrayListExtra("Calendars", (ArrayList<String>) formattedOutput);
+            startActivityForResult(intent,1);
         }
+
+//        public void onActivityResult(int requestCode,int resultCode, Intent data)
+//        {
+//            super.onActivityResult(requestCode,resultCode,data);
+//        }
+
 
         @Override
         protected void onCancelled() {
