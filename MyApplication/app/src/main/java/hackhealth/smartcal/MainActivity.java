@@ -228,8 +228,10 @@ public class MainActivity extends Activity
                 }
                 break;
 
-            case 1: System.out.println("YAY");
-                mOutputText.setText("TYAAAAAAAAAAAAAA");
+            case 1:
+                mOutputText.setText("12:00AM - 8:00AM: Sleep\n9:00AM-10:20AM: CSE 214\n11:00AM-11:53AM: AMS 351 Recitation\n1:00PM-4:00PM: Study\n5:30PM-7PM: CSE220\n"
+                    + "7:30PM-9PM: Work Out\n");//PLEASE GET DATA!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                break;
         }
     }
 
